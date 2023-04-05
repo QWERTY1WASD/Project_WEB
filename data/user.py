@@ -28,7 +28,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
         return check_password_hash(self.hashed_password, password)
 
     def __repr__(self):
-        return f'<User> {self.id} {self.surname} {self.name}'
+        return f'<User> with id={self.id}: {self.surname} {self.name}'
 
     @property
     def fio(self) -> str:
