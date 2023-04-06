@@ -12,14 +12,14 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'users'
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    surname = sa.Column(sa.String, nullable=True)
-    name = sa.Column(sa.String, nullable=True)
-    age = sa.Column(sa.Integer, nullable=True)
-    profession = sa.Column(sa.String, nullable=True)
-    address = sa.Column(sa.String, nullable=True)
-    email = sa.Column(sa.String, unique=True, nullable=True)
+    nickname = sa.Column(sa.String, unique=True)
     hashed_password = sa.Column(sa.String, nullable=True)
-    modified_date = sa.Column(sa.DateTime, default=datetime.datetime.now)
+    name = sa.Column(sa.String, nullable=True)
+    surname = sa.Column(sa.String, nullable=True)
+    age = sa.Column(sa.Integer, nullable=True)
+    phone = sa.Column(sa.String, nullable=True)
+    email = sa.Column(sa.String, unique=True, nullable=True)
+    created_date = sa.Column(sa.DateTime, default=datetime.datetime.now)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
