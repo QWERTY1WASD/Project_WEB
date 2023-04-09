@@ -1,4 +1,4 @@
-from data.system_functions import register, is_nickname_unique, login
+from data.system_functions import *
 
 from telegram.ext import ConversationHandler
 from config import FULL_NAME
@@ -20,6 +20,9 @@ async def help(update, context):
 
 
 async def register_user(update, context):
+    if get_current_user(update.message.from_user.id) is not None:
+        await update.message.reply_text("Для начала выйдите из аккаунта")
+        return ConversationHandler.END
     await update.message.reply_text("Регистрация...")
     await update.message.reply_text("Введите никнейм ->")
     return 'get_r_nickname'
@@ -72,9 +75,10 @@ async def get_surname(update, context):
 async def get_phone(update, context):
     phone = update.message.text
     context.user_data['phone'] = phone
-    await update.message.reply_text(register(context.user_data))
+    context.user_data['tg_id'] = update.message.from_user.id
+    register(context.user_data)
     await update.message.reply_text("...")
-    await update.message.reply_text("Всё OK!")
+    await update.message.reply_text("Успех. Наслаждайся")
     return ConversationHandler.END
 
 
@@ -84,6 +88,9 @@ async def stop(update, context):
 
 
 async def login_user(update, context):
+    if get_current_user(update.message.from_user.id) is not None:
+        await update.message.reply_text("Для начала выйдите из аккаунта")
+        return ConversationHandler.END
     await update.message.reply_text("Авторизация.,.")
     await update.message.reply_text("Введите никнейм: ")
     return 'get_l_nickname'
@@ -99,15 +106,27 @@ async def get_l_nickname(update, context):
 async def get_l_password(update, context):
     password = update.message.text
     context.user_data['password'] = password
-    user = login(context.user_data)
-    if user is None:
+    context.user_data['tg_id'] = update.message.from_user.id
+    if not login(context.user_data):
         await update.message.reply_text("Ага!!! что-то не так!!! Ещё разок >>> ")
-        return 'get_l_nickname'
-    context.current_user = user
-    await update.message.reply_text(f"Всё норм, {user.fio}")
+        return 'get_l_password'
+    await update.message.reply_text("Всё норм")
     return ConversationHandler.END
 
 
 async def login_user_end(update, context):
     await update.message.reply_text("Ну блин!")
     return ConversationHandler.END
+
+
+async def logout_user(update, context):
+    logout(update.message.from_user.id)
+    await update.message.reply_text("Вы вышли из аккаунта! Пока")
+
+
+async def say_hello(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт!")
+        return
+    await update.message.reply_text(f"Привет, {user.fio}")

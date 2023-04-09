@@ -1,7 +1,7 @@
 from data import db_session
 
 import logging
-from telegram.ext import Application, MessageHandler, filters, CommandHandler, ConversationHandler
+from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from config import BOT_TOKEN
 from handlers import *
 
@@ -44,6 +44,8 @@ def main():
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
+    application.add_handler(CommandHandler("say_hello", say_hello))
+    application.add_handler(CommandHandler("logout", logout_user))
     application.add_handler(reg_handler)
     application.add_handler(login_handler)
 

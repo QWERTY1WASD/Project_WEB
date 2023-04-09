@@ -3,18 +3,19 @@ from data.user import User
 from typing import Any, Optional
 
 
-def register(params: dict) -> str:
+def register(params: dict) -> User:
     db_sess = db_session.create_session()
     user = User(
         nickname=params['nickname'],
         name=params['name'],
         surname=params['surname'],
         phone=params['phone'],
+        telegram_id=params['tg_id']
     )
     user.set_password(params['password'])
     db_sess.add(user)
     db_sess.commit()
-    return "Успех. Наслаждайся"
+    return user
 
 
 def is_nickname_unique(nickname) -> bool:
@@ -26,9 +27,26 @@ def is_nickname_unique(nickname) -> bool:
     return True
 
 
-def login(params: dict) -> Optional[User]:
+def login(params: dict):
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.nickname == params['nickname']).first()
-    if user and user.check_password(params['password']):
-        return user
-    return
+    if user and user.check_password(params['password']) and user.telegram_id is None:
+        user.telegram_id = params['tg_id']
+        db_sess.merge(user)
+        db_sess.commit()
+        return True
+    return False
+
+
+def get_current_user(tg_id: int) -> Optional[User]:
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.telegram_id == tg_id).first()
+    return user
+
+
+def logout(tg_id: int):
+    db_sess = db_session.create_session()
+    user = get_current_user(tg_id)
+    user.telegram_id = None
+    db_sess.merge(user)
+    db_sess.commit()

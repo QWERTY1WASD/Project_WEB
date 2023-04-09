@@ -1,14 +1,11 @@
 import sqlalchemy as sa
 import datetime
-
-from flask_login import UserMixin
-from sqlalchemy_serializer import SerializerMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .db_session import SqlAlchemyBase
 
 
-class User(SqlAlchemyBase, UserMixin, SerializerMixin):
+class User(SqlAlchemyBase):
     __tablename__ = 'users'
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
@@ -18,6 +15,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     surname = sa.Column(sa.String, nullable=True)
     phone = sa.Column(sa.String, nullable=True)
     created_date = sa.Column(sa.DateTime, default=datetime.datetime.now)
+    telegram_id = sa.Column(sa.Integer, unique=True)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
