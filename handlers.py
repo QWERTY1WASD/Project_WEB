@@ -1,7 +1,22 @@
 from data.system_functions import *
+from telegram import ReplyKeyboardMarkup
 
 from telegram.ext import ConversationHandler
 from config import FULL_NAME
+
+
+# Add a keyboard
+reply_keyboard_not_login = [['/register_user', '/login_user']]
+markup_not_login = ReplyKeyboardMarkup(reply_keyboard_not_login, one_time_keyboard=False)
+reply_keyboard_is_login = [['/logout']]
+markup_is_login = ReplyKeyboardMarkup(reply_keyboard_is_login, one_time_keyboard=False)
+
+
+def change_keyboard(tg_user_id):
+    if get_current_user(tg_user_id) is None:
+        return markup_not_login
+    else:
+        return markup_is_login
 
 
 async def echo(update, context):
@@ -11,7 +26,8 @@ async def echo(update, context):
 async def start(update, context):
     await update.message.reply_text(
         f"Привет, меня зовут {FULL_NAME}. "
-        f"Я ваш личный ассистент. Чем могу помочь?"
+        f"Я ваш личный ассистент. Чем могу помочь?",
+        reply_markup=change_keyboard(update.message.from_user.id)
     )
 
 
@@ -72,13 +88,16 @@ async def get_surname(update, context):
     return 'get_phone'
 
 
-async def get_phone(update, context):
+async def get_phone(update, context):  # Получение телефона. Конец регистрации
     phone = update.message.text
     context.user_data['phone'] = phone
     context.user_data['tg_id'] = update.message.from_user.id
     register(context.user_data)
     await update.message.reply_text("...")
-    await update.message.reply_text("Успех. Наслаждайся")
+    await update.message.reply_text(
+        "Успех. Наслаждайся",
+        reply_markup=change_keyboard(update.message.from_user.id)
+    )
     return ConversationHandler.END
 
 
@@ -107,21 +126,23 @@ async def get_l_password(update, context):
     password = update.message.text
     context.user_data['password'] = password
     context.user_data['tg_id'] = update.message.from_user.id
-    if not login(context.user_data):
+    user_req = login(context.user_data)
+    if not user_req:
         await update.message.reply_text("Ага!!! что-то не так!!! Ещё разок >>> ")
         return 'get_l_password'
-    await update.message.reply_text("Всё норм")
-    return ConversationHandler.END
-
-
-async def login_user_end(update, context):
-    await update.message.reply_text("Ну блин!")
+    await update.message.reply_text(
+        "Всё норм",
+        reply_markup=change_keyboard(update.message.from_user.id)
+    )
     return ConversationHandler.END
 
 
 async def logout_user(update, context):
     logout(update.message.from_user.id)
-    await update.message.reply_text("Вы вышли из аккаунта! Пока")
+    await update.message.reply_text(
+        "Вы вышли из аккаунта! Пока",
+        reply_markup=change_keyboard(update.message.from_user.id)
+    )
 
 
 async def say_hello(update, context):
