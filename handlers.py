@@ -1,15 +1,29 @@
 from data.system_functions import *
-from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, KeyboardButton
 
 from telegram.ext import ConversationHandler
 from config import FULL_NAME
 
 
 # Add a keyboard
-reply_keyboard_not_login = [['/register_user', '/login_user']]
-markup_not_login = ReplyKeyboardMarkup(reply_keyboard_not_login, one_time_keyboard=False)
+reply_keyboard_not_login = [[KeyboardButton('/register_user'), '/login_user']]
+markup_not_login = ReplyKeyboardMarkup(
+    reply_keyboard_not_login,
+    one_time_keyboard=False,
+    resize_keyboard=True
+)
 reply_keyboard_is_login = [['/logout']]
-markup_is_login = ReplyKeyboardMarkup(reply_keyboard_is_login, one_time_keyboard=False)
+markup_is_login = ReplyKeyboardMarkup(
+    reply_keyboard_is_login,
+    one_time_keyboard=False,
+    resize_keyboard=True
+)
+reply_keyboard_stop = [['/stop']]
+markup_stop = ReplyKeyboardMarkup(
+    reply_keyboard_stop,
+    one_time_keyboard=False,
+    resize_keyboard=True
+)
 
 
 def change_keyboard(tg_user_id):
@@ -19,8 +33,11 @@ def change_keyboard(tg_user_id):
         return markup_is_login
 
 
-async def echo(update, context):
-    await update.message.reply_text(update.message.text)
+async def handle_messages(update, context):
+    text = update.message.text.lower()
+    if text == 'регистрация':
+        register_user()
+    print(text)
 
 
 async def start(update, context):
@@ -40,7 +57,7 @@ async def register_user(update, context):
         await update.message.reply_text("Для начала выйдите из аккаунта")
         return ConversationHandler.END
     await update.message.reply_text("Регистрация...")
-    await update.message.reply_text("Введите никнейм ->")
+    await update.message.reply_text("Введите никнейм ->", reply_markup=markup_stop)
     return 'get_r_nickname'
 
 
@@ -58,7 +75,6 @@ async def get_r_nickname(update, context):
 async def get_r_password(update, context):
     password = update.message.text
     context.user_data['password'] = password
-    # Проверка пароля на символы из того года
     await update.message.reply_text("Теперь продублируйте пароль..")
     return 'get_repeat_password'
 
@@ -70,7 +86,9 @@ async def get_repeat_password(update, context):
         # user_info['password'] = None
         await update.message.reply_text("Ошибкааа. Пароли не совпадают!!! Ещё раз.")
         return 'get_r_password'
-    await update.message.reply_text("Ok. Введите Ваше настоящее имя")
+    await update.message.reply_text(
+        "Ok. Введите Ваше настоящее имя (Это очень важно для дальнейшей работоспособности бота)"
+    )
     return 'get_name'
 
 
@@ -102,7 +120,10 @@ async def get_phone(update, context):  # Получение телефона. К
 
 
 async def stop(update, context):
-    await update.message.reply_text("Ну блин!")
+    await update.message.reply_text(
+        "Ну блин!",
+        reply_markup=change_keyboard(update.message.from_user.id)
+    )
     return ConversationHandler.END
 
 
@@ -111,7 +132,7 @@ async def login_user(update, context):
         await update.message.reply_text("Для начала выйдите из аккаунта")
         return ConversationHandler.END
     await update.message.reply_text("Авторизация.,.")
-    await update.message.reply_text("Введите никнейм: ")
+    await update.message.reply_text("Введите никнейм: ", reply_markup=markup_stop)
     return 'get_l_nickname'
 
 

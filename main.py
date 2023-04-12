@@ -40,6 +40,8 @@ def main():
     )
 
     # Add handlers
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_messages))
+
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("say_hello", say_hello))
