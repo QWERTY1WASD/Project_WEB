@@ -15,9 +15,11 @@ def main():
     application = Application.builder().token(BOT_TOKEN).build()
     logger.info('Start Bot')
 
+    text_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_messages)
+
     # Register
     reg_handler = ConversationHandler(
-        entry_points=[CommandHandler('register_user', register_user)],
+        entry_points=[text_handler],
         states={
             'get_r_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_r_nickname)],
             'get_r_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_r_password)],
@@ -31,7 +33,7 @@ def main():
 
     # Login
     login_handler = ConversationHandler(
-        entry_points=[CommandHandler('login_user', login_user)],
+        entry_points=[text_handler],
         states={
             'get_l_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_nickname)],
             'get_l_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_password)]
@@ -40,7 +42,7 @@ def main():
     )
 
     # Add handlers
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_messages))
+    # application.add_handler(text_handler)
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
