@@ -1,11 +1,24 @@
 import asyncio
+import random
+import json
 
 from data.system_functions import *
+
 from telegram import ReplyKeyboardMarkup
-
 from telegram.ext import ConversationHandler
-from config import FULL_NAME, REGISTER_WORDS, LOGIN_WORDS, STOP_WORDS
+from config import FULL_NAME, REGISTER_WORDS, LOGIN_WORDS, MURAD_TEXT_PATH
 
+
+def load_texts():
+    lst = [MURAD_TEXT_PATH]
+    texts = []
+    for filename in lst:
+        with open(filename, encoding='utf-8') as f:
+            texts.append(f.readlines())
+    return texts
+
+
+MURAD_TEXT = load_texts()[0]
 
 # Add a keyboards
 reply_keyboard_not_login = [['Регистрация', 'Авторизация']]
@@ -14,13 +27,13 @@ markup_not_login = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True
 )
-reply_keyboard_is_login = [['Выход']]
+reply_keyboard_is_login = [['/logout']]
 markup_is_login = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
     one_time_keyboard=False,
     resize_keyboard=True
 )
-reply_keyboard_stop = [['Стоп']]
+reply_keyboard_stop = [['/stop']]
 markup_stop = ReplyKeyboardMarkup(
     reply_keyboard_stop,
     one_time_keyboard=False,
@@ -41,8 +54,16 @@ async def handle_messages(update, context):
         return asyncio.create_task(register_user(update, context))
     elif text in LOGIN_WORDS:
         return asyncio.create_task(login_user(update, context))
-    elif text in STOP_WORDS:
-        return asyncio.create_task(stop(update, context))
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text(
+            "Остановитесь! Зайдите в аккаунт или зарегистрируйтесь"
+        )
+        return
+    else:
+        await update.message.reply_text(
+            random.choice(MURAD_TEXT).replace('{REPLACE}', user.name)
+        )
     # await update.message.reply_text(text)
 
 
@@ -52,6 +73,7 @@ async def start(update, context):
         f"Я ваш личный ассистент. Чем могу помочь?",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
+    context.bot.send_sticker(chat_id=update.message.chat_id, sticker='STICKER_ID')
 
 
 async def help(update, context):
@@ -69,11 +91,6 @@ async def register_user(update, context):
 
 async def get_r_nickname(update, context):
     nickname = update.message.text
-    print(nickname)
-    print(check_stop(nickname))
-    if check_stop(nickname):
-        print('asssa')
-        return asyncio.create_task(stop(update, context))
     if is_nickname_unique(nickname):
         await update.message.reply_text(f"{nickname}... Хороший выбор.")
         context.user_data['nickname'] = nickname
@@ -85,8 +102,6 @@ async def get_r_nickname(update, context):
 
 async def get_r_password(update, context):
     password = update.message.text
-    if check_stop(password):
-        return asyncio.create_task(stop(update, context))
     context.user_data['password'] = password
     await update.message.reply_text("Теперь продублируйте пароль..")
     return 'get_repeat_password'
@@ -94,11 +109,8 @@ async def get_r_password(update, context):
 
 async def get_repeat_password(update, context):
     repeat_password = update.message.text
-    if check_stop(repeat_password):
-        return asyncio.create_task(stop(update, context))
     if context.user_data['password'] != repeat_password:
         context.user_data['password'] = None
-        # user_info['password'] = None
         await update.message.reply_text("Ошибкааа. Пароли не совпадают!!! Ещё раз.")
         return 'get_r_password'
     await update.message.reply_text(
@@ -109,8 +121,6 @@ async def get_repeat_password(update, context):
 
 async def get_name(update, context):
     name = update.message.text
-    if check_stop(name):
-        return asyncio.create_task(stop(update, context))
     context.user_data['name'] = name
     await update.message.reply_text("Введите Вашу фамилию")
     return 'get_surname'
@@ -118,8 +128,6 @@ async def get_name(update, context):
 
 async def get_surname(update, context):
     surname = update.message.text
-    if check_stop(surname):
-        return asyncio.create_task(stop(update, context))
     context.user_data['surname'] = surname
     await update.message.reply_text(f"{context.user_data['nickname']}! Введи номер телефона")
     return 'get_phone'
@@ -127,8 +135,6 @@ async def get_surname(update, context):
 
 async def get_phone(update, context):  # Получение телефона. Конец регистрации
     phone = update.message.text
-    if check_stop(phone):
-        return asyncio.create_task(stop(update, context))
     context.user_data['phone'] = phone
     context.user_data['tg_id'] = update.message.from_user.id
     register(context.user_data)
@@ -159,8 +165,6 @@ async def login_user(update, context):
 
 async def get_l_nickname(update, context):
     nickname = update.message.text
-    if check_stop(nickname):
-        return asyncio.create_task(stop(update, context))
     context.user_data['nickname'] = nickname
     await update.message.reply_text(f"{nickname}, надеюсь ты помнишь пароль!")
     return 'get_l_password'
@@ -168,8 +172,6 @@ async def get_l_nickname(update, context):
 
 async def get_l_password(update, context):
     password = update.message.text
-    if check_stop(password):
-        return asyncio.create_task(stop(update, context))
     context.user_data['password'] = password
     context.user_data['tg_id'] = update.message.from_user.id
     user_req = login(context.user_data)
@@ -197,9 +199,4 @@ async def say_hello(update, context):
         await update.message.reply_text("Зайдите в аккаунт!")
         return
     await update.message.reply_text(f"Привет, {user.fio}")
-
-
-def check_stop(text):
-    if text.lower() in STOP_WORDS:
-        return True
-    return False
+    await update
