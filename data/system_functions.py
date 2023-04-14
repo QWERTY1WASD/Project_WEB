@@ -50,3 +50,11 @@ def logout(tg_id: int):
     user.telegram_id = None
     db_sess.merge(user)
     db_sess.commit()
+
+
+def change_selected_companion(tg_id: int, companion: str):
+    db_sess = db_session.create_session()
+    user = get_current_user(tg_id)
+    user.selected_companion = companion
+    db_sess.merge(user)
+    db_sess.commit()

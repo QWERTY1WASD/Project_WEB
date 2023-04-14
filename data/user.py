@@ -16,6 +16,7 @@ class User(SqlAlchemyBase):
     phone = sa.Column(sa.String, nullable=True)
     created_date = sa.Column(sa.DateTime, default=datetime.datetime.now)
     telegram_id = sa.Column(sa.Integer, unique=True)
+    selected_companion = sa.Column(sa.String, nullable=True, default='FlaRakRad')
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
@@ -29,6 +30,3 @@ class User(SqlAlchemyBase):
     @property
     def fio(self) -> str:
         return f'{self.surname} {self.name}'
-
-    def is_admin(self) -> bool:
-        return self.id == 0

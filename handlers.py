@@ -1,9 +1,11 @@
 import asyncio
 import random
+from io import BytesIO
+import requests
 
 from data.system_functions import *
 
-from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import ConversationHandler
 from config import *
 
@@ -29,10 +31,10 @@ markup_not_login = ReplyKeyboardMarkup(
 )
 reply_keyboard_is_login = [
     ['Случайная задача', 'Случайное место', 'Случайный стих'],
-    ['Выбрать собеседника'],
-    ['Инфо', '/logout']
+    ['Позвать Мурада 🔞', 'Позвать идущего к реке', 'Позвать FlaRakRad', 'Слушать эхо'],
+    ['Инфо', 'Выход']
 ]
-markup_is_login = ReplyKeyboardMarkup(
+markup_main_keyboard = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
     one_time_keyboard=False,
     resize_keyboard=True
@@ -43,13 +45,15 @@ markup_stop = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True
 )
+# Random place
+# 502 lines!!!
 
 
 def change_keyboard(tg_user_id):
     if get_current_user(tg_user_id) is None:
         return markup_not_login
     else:
-        return markup_is_login
+        return markup_main_keyboard
 
 
 async def handle_messages(update, context):
@@ -58,24 +62,41 @@ async def handle_messages(update, context):
         return asyncio.create_task(register_user(update, context))
     elif text in LOGIN_WORDS:
         return asyncio.create_task(login_user(update, context))
-    elif text in INFO_WORDS:
-        return asyncio.create_task(get_info(update, context))
-    elif text in RANDOM_CASE_WORDS:
-        return asyncio.create_task(print_random_case(update, context))
     user = get_current_user(update.message.from_user.id)
     if user is None:
         await update.message.reply_text(
             "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь"
         )
         return
+    elif text in EXIT_WORDS:
+        return asyncio.create_task(logout_user(update, context))
+    elif text in INFO_WORDS:
+        return asyncio.create_task(get_info(update, context))
+    elif text in RANDOM_CASE_WORDS:
+        return asyncio.create_task(generate_random_case(update, context))
+    elif text in RANDOM_PLACE_WORDS:
+        return asyncio.create_task(get_random_place(update, context))
+    elif text in RANDOM_POEM_WORDS:
+        asyncio.create_task(print_random_poem(update, context))
+        return
+    elif text in CHANGE_COMPANION:
+        change_selected_companion(user.telegram_id, COMPANIONS[CHANGE_COMPANION.index(text)])
+        await update.message.reply_text('Сейчас всё будет..')
     else:
-        await update.message.reply_text(
-            random.choice(MURAD_TEXT).replace('{REPLACE}', user.name)
-        )
-    # await update.message.reply_text(text)
+        companion = user.selected_companion
+        if companion == COMPANIONS[0]:
+            text = MURAD_TEXT
+        elif companion == COMPANIONS[1]:
+            text = GOING_TO_THE_RIVER_TEXT
+        elif companion == COMPANIONS[2]:
+            text = FLARAKRAD_TEXT
+        else:
+            await update.message.reply_text(update.message.text)
+            return
+        await update.message.reply_text(random.choice(text).replace('{REPLACE}', user.name))
 
 
-async def start(update, context):
+async def start(update: Update, context):
     await update.message.reply_text(
         f"Привет 👋, меня зовут {FULL_NAME}. "
         f"Я ваш личный ассистент 💼. Чем могу помочь?",
@@ -234,7 +255,7 @@ async def print_random_poem(update, context):
     await update.message.reply_text(poem.replace('{REPLACE}', user.name))
 
 
-async def print_random_case(update, context):
+async def generate_random_case(update, context):
     first_number = random.randint(0, 100)
     second_number = random.randint(0, 100)
     sign = random.choice(['+', '-', '*'])
@@ -252,3 +273,19 @@ async def get_user_answer(update, context):
         await update.message.reply_text(f'ХАХАХА Не правильно. Будет {context.user_data["answer"]}')
     return ConversationHandler.END
 
+
+async def get_random_place(update, context):
+    try:
+        map_request = "http://static-maps.yandex.ru/1.x/"
+        ll = (random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]),
+              random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]))
+        spn = random.randint(1, 20) / 10
+        response = requests.get(map_request, params={
+            'll': f'{ll[0]},{ll[1]}',
+            'spn': f'{spn},{spn}',
+            'l': 'sat,skl'
+        })
+        await update.message.reply_text(f'Случайное место с координатами: {ll[0]}, {ll[1]}')
+        await update.message.reply_photo(response.content)
+    except Exception:
+        await update.message.reply_text('Что-то пошло не так!!!')

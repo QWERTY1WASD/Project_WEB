@@ -31,7 +31,7 @@ def main():
             'get_l_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_nickname)],
             'get_l_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_password)],
 
-            'print_random_case': [MessageHandler(filters.TEXT & ~filters.COMMAND, print_random_case)],
+            'generate_random_case': [MessageHandler(filters.TEXT & ~filters.COMMAND, generate_random_case)],
             'get_user_answer': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_answer)],
         },
         fallbacks=[CommandHandler('stop', stop)]
@@ -44,6 +44,7 @@ def main():
     application.add_handler(CommandHandler("say_hello", say_hello))
     application.add_handler(CommandHandler("logout", logout_user))
     application.add_handler(CommandHandler("get_info", get_info))
+    application.add_handler(CommandHandler("get_random_place", get_random_place))
 
     application.run_polling()
 
