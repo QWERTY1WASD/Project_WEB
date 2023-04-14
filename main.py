@@ -18,7 +18,7 @@ def main():
     text_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_messages)
 
     # Register or login
-    reg_or_log_handler = ConversationHandler(
+    reg_or_log_and_other_handler = ConversationHandler(
         entry_points=[text_handler],
         states={
             'get_r_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_r_nickname)],
@@ -29,12 +29,15 @@ def main():
             'get_phone': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
 
             'get_l_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_nickname)],
-            'get_l_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_password)]
+            'get_l_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_password)],
+
+            'print_random_case': [MessageHandler(filters.TEXT & ~filters.COMMAND, print_random_case)],
+            'get_user_answer': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_answer)],
         },
         fallbacks=[CommandHandler('stop', stop)]
     )
     # Add handlers
-    application.add_handler(reg_or_log_handler)
+    application.add_handler(reg_or_log_and_other_handler)
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))

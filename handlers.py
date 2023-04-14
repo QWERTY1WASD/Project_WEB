@@ -3,21 +3,23 @@ import random
 
 from data.system_functions import *
 
-from telegram import ReplyKeyboardMarkup, StickerSet, Update
+from telegram import ReplyKeyboardMarkup
 from telegram.ext import ConversationHandler
-from config import FULL_NAME, REGISTER_WORDS, LOGIN_WORDS, MURAD_TEXT_PATH
+from config import *
 
 
 def load_texts():
-    lst = [MURAD_TEXT_PATH]
+    lst = [MURAD_TEXT_PATH, GOING_TO_THE_RIVER_PATH, FLARAKRAD_PATH]
     texts = []
     for filename in lst:
         with open(filename, encoding='utf-8') as f:
             texts.append(f.readlines())
+    with open(POEMS_PATH, encoding='utf-8') as f_poems:
+        texts.append(f_poems.read().split(POEMS_SEPARATOR))
     return texts
 
 
-MURAD_TEXT = load_texts()[0]
+MURAD_TEXT, GOING_TO_THE_RIVER_TEXT, FLARAKRAD_TEXT, POEMS_LIST = load_texts()
 # Add a keyboards
 reply_keyboard_not_login = [['Регистрация', 'Авторизация']]
 markup_not_login = ReplyKeyboardMarkup(
@@ -25,7 +27,11 @@ markup_not_login = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True
 )
-reply_keyboard_is_login = [['/logout']]
+reply_keyboard_is_login = [
+    ['Случайная задача', 'Случайное место', 'Случайный стих'],
+    ['Выбрать собеседника'],
+    ['Инфо', '/logout']
+]
 markup_is_login = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
     one_time_keyboard=False,
@@ -52,7 +58,10 @@ async def handle_messages(update, context):
         return asyncio.create_task(register_user(update, context))
     elif text in LOGIN_WORDS:
         return asyncio.create_task(login_user(update, context))
-
+    elif text in INFO_WORDS:
+        return asyncio.create_task(get_info(update, context))
+    elif text in RANDOM_CASE_WORDS:
+        return asyncio.create_task(print_random_case(update, context))
     user = get_current_user(update.message.from_user.id)
     if user is None:
         await update.message.reply_text(
@@ -66,7 +75,7 @@ async def handle_messages(update, context):
     # await update.message.reply_text(text)
 
 
-async def start(update: Update, context):
+async def start(update, context):
     await update.message.reply_text(
         f"Привет 👋, меня зовут {FULL_NAME}. "
         f"Я ваш личный ассистент 💼. Чем могу помочь?",
@@ -83,7 +92,7 @@ async def register_user(update, context):
         await update.message.reply_text("❌ Для начала выйдите из аккаунта")
         return ConversationHandler.END
     await update.message.reply_text("🧐 Регистрация...")
-    await update.message.reply_text("Введите никнейм ->", reply_markup=markup_stop)
+    await update.message.reply_text("Введите никнейм ✍️(◔◡◔) ->", reply_markup=markup_stop)
     return 'get_r_nickname'
 
 
@@ -184,7 +193,11 @@ async def get_l_password(update, context):
 
 
 async def logout_user(update, context):
-    logout(update.message.from_user.id)
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Прежде чем выходить, зайдите в аккаунт!")
+        return
+    logout(user.telegram_id)
     await update.message.reply_text(
         "Вы вышли из аккаунта! Пока 🥺",
         reply_markup=change_keyboard(update.message.from_user.id)
@@ -206,5 +219,36 @@ async def get_info(update, context):
         return
     text = f'Пользователь с id={user.id} ** Никнейм: {user.nickname} ** ' \
            f'Имя: {user.name} ** Фамилия: {user.surname} ** ' \
-           f'Номер телефона: {user.phone} ** {user.nickname}, доволен 🧐?'
+           f'Номер телефона: {user.phone} ** ' \
+           f'Дата и время создания: {user.created_date} ** ' \
+           f'Пароль: Блин... он хэшируется ** {user.nickname}, доволен 🧐?'
     await update.message.reply_text(text.replace(' ** ', '\n'))
+
+
+async def print_random_poem(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт!")
+        return
+    poem = random.choice(POEMS_LIST)
+    await update.message.reply_text(poem.replace('{REPLACE}', user.name))
+
+
+async def print_random_case(update, context):
+    first_number = random.randint(0, 100)
+    second_number = random.randint(0, 100)
+    sign = random.choice(['+', '-', '*'])
+    text = f'{first_number} {sign} {second_number}'
+    context.user_data['answer'] = eval(text)
+    await update.message.reply_text(f'Сколько будет {text}?')
+    return 'get_user_answer'
+
+
+async def get_user_answer(update, context):
+    user_answer = update.message.text
+    if user_answer.strip() == str(context.user_data["answer"]):
+        await update.message.reply_text('Молодец')
+    else:
+        await update.message.reply_text(f'ХАХАХА Не правильно. Будет {context.user_data["answer"]}')
+    return ConversationHandler.END
+
