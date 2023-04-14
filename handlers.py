@@ -1,10 +1,9 @@
 import asyncio
 import random
-import json
 
 from data.system_functions import *
 
-from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, StickerSet, Update
 from telegram.ext import ConversationHandler
 from config import FULL_NAME, REGISTER_WORDS, LOGIN_WORDS, MURAD_TEXT_PATH
 
@@ -19,7 +18,6 @@ def load_texts():
 
 
 MURAD_TEXT = load_texts()[0]
-
 # Add a keyboards
 reply_keyboard_not_login = [['Регистрация', 'Авторизация']]
 markup_not_login = ReplyKeyboardMarkup(
@@ -54,10 +52,11 @@ async def handle_messages(update, context):
         return asyncio.create_task(register_user(update, context))
     elif text in LOGIN_WORDS:
         return asyncio.create_task(login_user(update, context))
+
     user = get_current_user(update.message.from_user.id)
     if user is None:
         await update.message.reply_text(
-            "Остановитесь! Зайдите в аккаунт или зарегистрируйтесь"
+            "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь"
         )
         return
     else:
@@ -67,24 +66,23 @@ async def handle_messages(update, context):
     # await update.message.reply_text(text)
 
 
-async def start(update, context):
+async def start(update: Update, context):
     await update.message.reply_text(
-        f"Привет, меня зовут {FULL_NAME}. "
-        f"Я ваш личный ассистент. Чем могу помочь?",
+        f"Привет 👋, меня зовут {FULL_NAME}. "
+        f"Я ваш личный ассистент 💼. Чем могу помочь?",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
-    context.bot.send_sticker(chat_id=update.message.chat_id, sticker='STICKER_ID')
 
 
 async def help(update, context):
-    await update.message.reply_text("HEEEELLLPP.")
+    await update.message.reply_text("HEEEELLLPP 😭.")
 
 
 async def register_user(update, context):
     if get_current_user(update.message.from_user.id) is not None:
-        await update.message.reply_text("Для начала выйдите из аккаунта")
+        await update.message.reply_text("❌ Для начала выйдите из аккаунта")
         return ConversationHandler.END
-    await update.message.reply_text("Регистрация...")
+    await update.message.reply_text("🧐 Регистрация...")
     await update.message.reply_text("Введите никнейм ->", reply_markup=markup_stop)
     return 'get_r_nickname'
 
@@ -129,7 +127,7 @@ async def get_name(update, context):
 async def get_surname(update, context):
     surname = update.message.text
     context.user_data['surname'] = surname
-    await update.message.reply_text(f"{context.user_data['nickname']}! Введи номер телефона")
+    await update.message.reply_text(f"{context.user_data['nickname']}! Введи номер телефона 📲")
     return 'get_phone'
 
 
@@ -140,7 +138,7 @@ async def get_phone(update, context):  # Получение телефона. К
     register(context.user_data)
     await update.message.reply_text("...")
     await update.message.reply_text(
-        "Успех. Наслаждайся",
+        "Успех. Наслаждайся 😘",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
     return ConversationHandler.END
@@ -148,7 +146,7 @@ async def get_phone(update, context):  # Получение телефона. К
 
 async def stop(update, context):
     await update.message.reply_text(
-        "Ну блин!",
+        "Ну блин! 🤬",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
     return ConversationHandler.END
@@ -156,9 +154,9 @@ async def stop(update, context):
 
 async def login_user(update, context):
     if get_current_user(update.message.from_user.id) is not None:
-        await update.message.reply_text("Для начала выйдите из аккаунта")
+        await update.message.reply_text("Для начала выйдите из аккаунта 😵")
         return ConversationHandler.END
-    await update.message.reply_text("Авторизация.,.")
+    await update.message.reply_text("Авторизация.,. 🤔")
     await update.message.reply_text("Введите никнейм: ", reply_markup=markup_stop)
     return 'get_l_nickname'
 
@@ -176,10 +174,10 @@ async def get_l_password(update, context):
     context.user_data['tg_id'] = update.message.from_user.id
     user_req = login(context.user_data)
     if not user_req:
-        await update.message.reply_text("Ага!!! что-то не так!!! Ещё разок >>> ")
+        await update.message.reply_text("Ага!!! 😎 что-то не так!!! Ещё разок >>> ")
         return 'get_l_password'
     await update.message.reply_text(
-        "Всё норм",
+        "Всё норм 😚",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
     return ConversationHandler.END
@@ -188,7 +186,7 @@ async def get_l_password(update, context):
 async def logout_user(update, context):
     logout(update.message.from_user.id)
     await update.message.reply_text(
-        "Вы вышли из аккаунта! Пока",
+        "Вы вышли из аккаунта! Пока 🥺",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
 
@@ -199,4 +197,14 @@ async def say_hello(update, context):
         await update.message.reply_text("Зайдите в аккаунт!")
         return
     await update.message.reply_text(f"Привет, {user.fio}")
-    await update
+
+
+async def get_info(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт!")
+        return
+    text = f'Пользователь с id={user.id} ** Никнейм: {user.nickname} ** ' \
+           f'Имя: {user.name} ** Фамилия: {user.surname} ** ' \
+           f'Номер телефона: {user.phone} ** {user.nickname}, доволен 🧐?'
+    await update.message.reply_text(text.replace(' ** ', '\n'))

@@ -5,3 +5,4 @@ MURAD_TEXT_PATH = "static/murad.txt"
 REGISTER_WORDS = ['reg', 'register', 'регистрация', 'зарегаться']
 LOGIN_WORDS = ['log', 'login', 'авторизация', 'вход']
 STOP_WORDS = ['stop', 'стоп']
+INFO_WORDS = ['info', 'information', 'инфо', 'инфа', 'информация']

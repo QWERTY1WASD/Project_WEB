@@ -1,6 +1,6 @@
 from data import db_session
 from data.user import User
-from typing import Any, Optional
+from typing import Optional
 
 
 def register(params: dict) -> User:

@@ -40,6 +40,7 @@ def main():
     application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("say_hello", say_hello))
     application.add_handler(CommandHandler("logout", logout_user))
+    application.add_handler(CommandHandler("get_info", get_info))
 
     application.run_polling()
 
