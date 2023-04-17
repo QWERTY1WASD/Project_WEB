@@ -3,6 +3,7 @@ from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from handlers import *
 
 logging.basicConfig(
+    # filename='bot_log.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG
 )
 
@@ -42,9 +43,10 @@ def main():
     application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("say_hello", say_hello))
     application.add_handler(CommandHandler("logout", logout_user))
-    application.add_handler(CommandHandler("get_info", get_info))
+    application.add_handler(CommandHandler("user_info", user_info))
     application.add_handler(CommandHandler("get_random_place", get_random_place))
     application.add_handler(CommandHandler("get_all_users_info", get_all_users_info))
+    application.add_handler(CommandHandler("reload_data", reload_data))
 
     application.run_polling()
 

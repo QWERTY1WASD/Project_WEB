@@ -6,7 +6,7 @@ from data.system_functions import *
 
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import ConversationHandler
-from config import *
+from constants import *
 
 
 def load_texts():
@@ -31,7 +31,7 @@ markup_not_login = ReplyKeyboardMarkup(
 reply_keyboard_is_login = [
     ['Случайная задача', 'Случайное место', 'Случайный стих'],
     ['Позвать Мурада 🔞', 'Позвать идущего к реке', 'Позвать FlaRakRad', 'Слушать эхо'],
-    ['Инфо', 'Выход']
+    ['Инфо', 'Выход', 'Помощь']
 ]
 markup_main_keyboard = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
@@ -63,13 +63,12 @@ async def handle_messages(update, context):
     user = get_current_user(update.message.from_user.id)
     if user is None:
         await update.message.reply_text(
-            "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь"
-        )
+            "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь")
         return
     elif text in EXIT_WORDS:
         return asyncio.create_task(logout_user(update, context))
     elif text in INFO_WORDS:
-        return asyncio.create_task(get_info(update, context))
+        return asyncio.create_task(user_info(update, context))
     elif text in RANDOM_CASE_WORDS:
         return asyncio.create_task(generate_random_case(update, context))
     elif text in RANDOM_PLACE_WORDS:
@@ -77,38 +76,37 @@ async def handle_messages(update, context):
     elif text in RANDOM_POEM_WORDS:
         asyncio.create_task(print_random_poem(update, context))
         return
-    elif text in CHANGE_COMPANION:
-        change_selected_companion(user.telegram_id, COMPANIONS[CHANGE_COMPANION.index(text)])
+    elif text in HELP_WORDS:
+        asyncio.create_task(help(update, context))
+        return
+    companion = user.selected_companion
+    if text in CHANGE_COMPANION:
+        companion = COMPANIONS[CHANGE_COMPANION.index(text)]
+        change_selected_companion(user.telegram_id, companion)
         await update.message.reply_text('Сейчас всё будет..')
+    if companion == COMPANIONS[0]:
+        text = MURAD_TEXT
+    elif companion == COMPANIONS[1]:
+        text = GOING_TO_THE_RIVER_TEXT
+    elif companion == COMPANIONS[2]:
+        text = FLARAKRAD_TEXT
     else:
-        companion = user.selected_companion
-        if companion == COMPANIONS[0]:
-            text = MURAD_TEXT
-        elif companion == COMPANIONS[1]:
-            text = GOING_TO_THE_RIVER_TEXT
-        elif companion == COMPANIONS[2]:
-            text = FLARAKRAD_TEXT
-        else:
-            await update.message.reply_text(update.message.text)
-            return
-        await update.message.reply_text(random.choice(text).replace('{REPLACE}', user.name))
+        await update.message.reply_text(update.message.text)
+        return
+    await update.message.reply_text(random.choice(text).replace('{REPLACE}', user.name))
 
 
 async def start(update: Update, context):
     await update.message.reply_text(
         f"Привет 👋, меня зовут {FULL_NAME}. "
-        f"Я ваш личный ассистент 💼. Чем могу помочь?",
+        f"С нами Вы сможете очень хорошо провести некоторую часть Вашего времени."
+        f"Чем могу помочь?",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
 
 
 async def help(update, context):
-    await update.message.reply_text(f"Возникли вопросы?, я помогу!!!")
-    await update.message.reply_text("Перед тем, как воспользоваться полным "
-                                    "функционалом бота, вам нужно войти в аккаунт")
-    await update.message.reply_text("***")
-    await update.message.reply_text("'Случайная задача': бот задаёт рандомный пример, решите его(он лёгкий)")
-    # Maybe move to .txt this
+    await update.message.reply_text(HELP_TEXT)
 
 
 async def register_user(update, context):
@@ -236,7 +234,7 @@ async def say_hello(update, context):
     await update.message.reply_text(f"Привет, {user.fio}")
 
 
-async def get_info(update, context):
+async def user_info(update, context):
     user = get_current_user(update.message.from_user.id)
     if user is None:
         await update.message.reply_text("Зайдите в аккаунт!")
@@ -294,9 +292,23 @@ async def get_random_place(update, context):
         await update.message.reply_text('Что-то пошло не так!!!')
 
 
+# Admins only
 async def get_all_users_info(update, context):
     await update.message.reply_text("Сейчас посмотрим...")
     users_data = get_all_users(update.message.from_user.id)
     if not users_data:
         await update.message.reply_text("У вас нет таких привилегий!!!")
     await update.message.reply_text('\n'.join(f"{user.id}. {user}" for user in users_data))
+
+
+async def reload_data(update, context):
+    await update.message.reply_text("Сейчас посмотрим...")
+    users_data = get_all_users(update.message.from_user.id)
+    if not users_data:
+        await update.message.reply_text("У вас нет таких привилегий!!!")
+    try:
+        load_texts()
+    except Exception as e:
+        await update.message.reply_text(f"ERROR!!!: {e}")
+    else:
+        await update.message.reply_text("Всё ок")
