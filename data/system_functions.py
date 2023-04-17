@@ -58,3 +58,11 @@ def change_selected_companion(tg_id: int, companion: str):
     user.selected_companion = companion
     db_sess.merge(user)
     db_sess.commit()
+
+
+def get_all_users(tg_id: int) -> list:
+    db_sess = db_session.create_session()
+    user = get_current_user(tg_id)
+    if not user.is_admin:
+        return []
+    return db_sess.query(User).all()

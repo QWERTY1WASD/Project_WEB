@@ -18,4 +18,4 @@ RANDOM_POEM_WORDS = ['случайный стих', 'стих', 'рандомн�
 CHANGE_COMPANION = ['позвать мурада 🔞', 'позвать идущего к реке', 'позвать flarakrad', 'слушать эхо']
 COMPANIONS = ['Murad', 'Going To The River', 'FlaRakRad', 'Echo']
 
-MIN_AND_MAX_LONGITUDE = (0, 75)
+MIN_AND_MAX_LONGITUDE = (0, 7500)

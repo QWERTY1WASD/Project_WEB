@@ -1,6 +1,5 @@
 import logging
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
-from config import BOT_TOKEN
 from handlers import *
 
 logging.basicConfig(
@@ -17,7 +16,7 @@ def main():
 
     text_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_messages)
 
-    # Register or login
+    # Register or login or other
     reg_or_log_and_other_handler = ConversationHandler(
         entry_points=[text_handler],
         states={
@@ -45,6 +44,7 @@ def main():
     application.add_handler(CommandHandler("logout", logout_user))
     application.add_handler(CommandHandler("get_info", get_info))
     application.add_handler(CommandHandler("get_random_place", get_random_place))
+    application.add_handler(CommandHandler("get_all_users_info", get_all_users_info))
 
     application.run_polling()
 

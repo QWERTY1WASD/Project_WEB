@@ -25,8 +25,14 @@ class User(SqlAlchemyBase):
         return check_password_hash(self.hashed_password, password)
 
     def __repr__(self):
-        return f'<User> with id={self.id}: {self.surname} {self.name}'
+        return f'<User>: {self.surname} {self.name}, ' \
+               f'"{self.nickname}" has phone: {self.phone}, tg_id: {self.telegram_id}, ' \
+               f'selected companion: {self.selected_companion}, created date: {self.created_date}'
 
     @property
     def fio(self) -> str:
         return f'{self.surname} {self.name}'
+
+    @property
+    def is_admin(self) -> bool:
+        return self.id == 1

@@ -1,6 +1,5 @@
 import asyncio
 import random
-from io import BytesIO
 import requests
 
 from data.system_functions import *
@@ -37,7 +36,8 @@ reply_keyboard_is_login = [
 markup_main_keyboard = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
     one_time_keyboard=False,
-    resize_keyboard=True
+    resize_keyboard=True,
+    is_persistent=True
 )
 reply_keyboard_stop = [['/stop']]
 markup_stop = ReplyKeyboardMarkup(
@@ -45,8 +45,6 @@ markup_stop = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True
 )
-# Random place
-# 502 lines!!!
 
 
 def change_keyboard(tg_user_id):
@@ -105,7 +103,12 @@ async def start(update: Update, context):
 
 
 async def help(update, context):
-    await update.message.reply_text("HEEEELLLPP 😭.")
+    await update.message.reply_text(f"Возникли вопросы?, я помогу!!!")
+    await update.message.reply_text("Перед тем, как воспользоваться полным "
+                                    "функционалом бота, вам нужно войти в аккаунт")
+    await update.message.reply_text("***")
+    await update.message.reply_text("'Случайная задача': бот задаёт рандомный пример, решите его(он лёгкий)")
+    # Maybe move to .txt this
 
 
 async def register_user(update, context):
@@ -277,9 +280,9 @@ async def get_user_answer(update, context):
 async def get_random_place(update, context):
     try:
         map_request = "http://static-maps.yandex.ru/1.x/"
-        ll = (random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]),
-              random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]))
-        spn = random.randint(1, 20) / 10
+        ll = (random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]) / 100,
+              random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]) / 100)
+        spn = random.randint(1, 200) / 100
         response = requests.get(map_request, params={
             'll': f'{ll[0]},{ll[1]}',
             'spn': f'{spn},{spn}',
@@ -289,3 +292,11 @@ async def get_random_place(update, context):
         await update.message.reply_photo(response.content)
     except Exception:
         await update.message.reply_text('Что-то пошло не так!!!')
+
+
+async def get_all_users_info(update, context):
+    await update.message.reply_text("Сейчас посмотрим...")
+    users_data = get_all_users(update.message.from_user.id)
+    if not users_data:
+        await update.message.reply_text("У вас нет таких привилегий!!!")
+    await update.message.reply_text('\n'.join(f"{user.id}. {user}" for user in users_data))
