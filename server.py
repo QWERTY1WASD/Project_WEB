@@ -3,7 +3,7 @@ from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from handlers import *
 
 logging.basicConfig(
-    # filename='bot_log.log',
+    filename='bot_log.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG
 )
 
