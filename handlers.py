@@ -93,15 +93,15 @@ async def handle_messages(update, context):
         change_selected_companion(user.telegram_id, companion)
         await update.message.reply_text('Сейчас всё будет..')
     if companion == COMPANIONS[0]:
-        text = murad_text
+        current_text = murad_text
     elif companion == COMPANIONS[1]:
-        text = going_to_the_river_text
+        current_text = going_to_the_river_text
     elif companion == COMPANIONS[2]:
-        text = flarakrad_text
+        current_text = flarakrad_text
     else:
         await update.message.reply_text(update.message.text)
         return
-    text = random.choice(text).replace('{REPLACE}', user.name)
+    text = random.choice(current_text).replace('{REPLACE}', user.name)
     try:
         while text == context.user_data['text']:
             text = random.choice(text).replace('{REPLACE}', user.name)  # Чтобы не было повторений
