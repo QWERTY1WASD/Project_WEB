@@ -9,7 +9,8 @@ from telegram.ext import ConversationHandler
 from constants import *
 
 
-murad_text = going_to_the_river_text = flarakrad_text = poems_list = None
+murad_text = going_to_the_river_text = flarakrad_text = ''
+poems_list = []
 
 
 def load_texts():
