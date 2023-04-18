@@ -253,7 +253,7 @@ async def print_random_poem(update, context):
         await update.message.reply_text("Зайдите в аккаунт!")
         return
     poem = random.choice(POEMS_LIST)
-    await update.message.reply_text(poem.replace('{REPLACE}', user.name))
+    await update.message.reply_text(poem.replace('{REPLACE}', user.name), parse_mode="Markdown")
 
 
 async def generate_random_case(update, context):
@@ -280,13 +280,14 @@ async def get_random_place(update, context):
         map_request = "http://static-maps.yandex.ru/1.x/"
         ll = (random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]) / 100,
               random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]) / 100)
-        spn = random.randint(1, 200) / 100
+        spn = random.randint(MIN_AND_MAX_SCALE[0], MIN_AND_MAX_SCALE[1]) / 100
         response = requests.get(map_request, params={
             'll': f'{ll[0]},{ll[1]}',
             'spn': f'{spn},{spn}',
             'l': 'sat,skl'
         })
-        await update.message.reply_text(f'Случайное место с координатами: {ll[0]}, {ll[1]}')
+        await update.message.reply_text(f'Случайное место с координатами: {ll[0]}, {ll[1]}. '
+                                        f'Масштаб: {spn}')
         await update.message.reply_photo(response.content)
     except Exception:
         await update.message.reply_text('Что-то пошло не так!!!')
@@ -298,7 +299,8 @@ async def get_all_users_info(update, context):
     users_data = get_all_users(update.message.from_user.id)
     if not users_data:
         await update.message.reply_text("У вас нет таких привилегий!!!")
-    await update.message.reply_text('\n'.join(f"{user.id}. {user}" for user in users_data))
+    else:
+        await update.message.reply_text('\n'.join(f"{user.id}. {user}" for user in users_data))
 
 
 async def reload_data(update, context):
@@ -306,9 +308,23 @@ async def reload_data(update, context):
     users_data = get_all_users(update.message.from_user.id)
     if not users_data:
         await update.message.reply_text("У вас нет таких привилегий!!!")
+        return
     try:
         load_texts()
     except Exception as e:
         await update.message.reply_text(f"ERROR!!!: {e}")
     else:
         await update.message.reply_text("Всё ок")
+
+
+async def info_bot(update, context):
+    await update.message.reply_text(f"""
+Телеграмм-бот: {FULL_NAME},
+Разработал: {DEV_NAME},
+Git Hub: {DEV_GIT_HUB},
+Телеграм-id: {DEV_TG_NAME}
+(Пишите, звоните по вопросам рекламы и предложений)
+
+Версия: {VERSION}
+Спасибо, за использование!
+    """)

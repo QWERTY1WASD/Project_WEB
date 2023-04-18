@@ -30,6 +30,7 @@ HELP_TEXT = """Возникли вопросы?, я помогу!!!
 ***
 Инфо: инфа о текущем пользователе (вот это дааа)
 Выход: всё понятно, если не чайник
+/info_bot: информация о боте.
 
 >_  ** Admin only **
 /get_all_users_info: Вывод инфы о всех пользователях
@@ -41,3 +42,9 @@ UPD:
 """
 
 MIN_AND_MAX_LONGITUDE = (1000, 7500)
+MIN_AND_MAX_SCALE = (1, 200)
+
+VERSION = 1.0
+DEV_NAME = "Пономарев Илья Сергеевич"
+DEV_GIT_HUB = "https://github.com/QWERTY1WASD/Project-WEB"
+DEV_TG_NAME = "@delovoy_ilyxa"
