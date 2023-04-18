@@ -9,7 +9,12 @@ from telegram.ext import ConversationHandler
 from constants import *
 
 
+murad_text = going_to_the_river_text = flarakrad_text = poems_list = None
+
+
 def load_texts():
+    global murad_text, going_to_the_river_text, flarakrad_text, poems_list
+
     lst = [MURAD_TEXT_PATH, GOING_TO_THE_RIVER_PATH, FLARAKRAD_PATH]
     texts = []
     for filename in lst:
@@ -17,10 +22,10 @@ def load_texts():
             texts.append(f.readlines())
     with open(POEMS_PATH, encoding='utf-8') as f_poems:
         texts.append(f_poems.read().split(POEMS_SEPARATOR))
-    return texts
+    murad_text, going_to_the_river_text, flarakrad_text, poems_list = texts
 
 
-MURAD_TEXT, GOING_TO_THE_RIVER_TEXT, FLARAKRAD_TEXT, POEMS_LIST = load_texts()
+load_texts()
 # Add a keyboards
 reply_keyboard_not_login = [['Регистрация', 'Авторизация']]
 markup_not_login = ReplyKeyboardMarkup(
@@ -66,18 +71,21 @@ async def handle_messages(update, context):
             "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь")
         return
     elif text in EXIT_WORDS:
-        return asyncio.create_task(logout_user(update, context))
+        return asyncio.create_task(logout_user(update, context, user))
     elif text in INFO_WORDS:
-        return asyncio.create_task(user_info(update, context))
+        return asyncio.create_task(user_info(update, context, user))
     elif text in RANDOM_CASE_WORDS:
         return asyncio.create_task(generate_random_case(update, context))
     elif text in RANDOM_PLACE_WORDS:
         return asyncio.create_task(get_random_place(update, context))
     elif text in RANDOM_POEM_WORDS:
-        asyncio.create_task(print_random_poem(update, context))
+        asyncio.create_task(print_random_poem(update, context, user))
         return
     elif text in HELP_WORDS:
         asyncio.create_task(help(update, context))
+        return
+    elif text in HELLO_WORDS:
+        asyncio.create_task(say_hello(update, context, user))
         return
     companion = user.selected_companion
     if text in CHANGE_COMPANION:
@@ -85,15 +93,22 @@ async def handle_messages(update, context):
         change_selected_companion(user.telegram_id, companion)
         await update.message.reply_text('Сейчас всё будет..')
     if companion == COMPANIONS[0]:
-        text = MURAD_TEXT
+        text = murad_text
     elif companion == COMPANIONS[1]:
-        text = GOING_TO_THE_RIVER_TEXT
+        text = going_to_the_river_text
     elif companion == COMPANIONS[2]:
-        text = FLARAKRAD_TEXT
+        text = flarakrad_text
     else:
         await update.message.reply_text(update.message.text)
         return
-    await update.message.reply_text(random.choice(text).replace('{REPLACE}', user.name))
+    text = random.choice(text).replace('{REPLACE}', user.name)
+    try:
+        while text == context.user_data['text']:
+            text = random.choice(text).replace('{REPLACE}', user.name)  # Чтобы не было повторений
+    except KeyError:
+        context.user_data['text'] = ' '
+    await update.message.reply_text(text)
+    context.user_data['text'] = text
 
 
 async def start(update: Update, context):
@@ -214,11 +229,7 @@ async def get_l_password(update, context):
     return ConversationHandler.END
 
 
-async def logout_user(update, context):
-    user = get_current_user(update.message.from_user.id)
-    if user is None:
-        await update.message.reply_text("Прежде чем выходить, зайдите в аккаунт!")
-        return
+async def logout_user(update, context, user):
     logout(user.telegram_id)
     await update.message.reply_text(
         "Вы вышли из аккаунта! Пока 🥺",
@@ -226,19 +237,12 @@ async def logout_user(update, context):
     )
 
 
-async def say_hello(update, context):
+async def say_hello(update, context, user):
     user = get_current_user(update.message.from_user.id)
-    if user is None:
-        await update.message.reply_text("Зайдите в аккаунт!")
-        return
     await update.message.reply_text(f"Привет, {user.fio}")
 
 
-async def user_info(update, context):
-    user = get_current_user(update.message.from_user.id)
-    if user is None:
-        await update.message.reply_text("Зайдите в аккаунт!")
-        return
+async def user_info(update, context, user):
     text = f'Пользователь с id={user.id} ** Никнейм: {user.nickname} ** ' \
            f'Имя: {user.name} ** Фамилия: {user.surname} ** ' \
            f'Номер телефона: {user.phone} ** ' \
@@ -247,12 +251,8 @@ async def user_info(update, context):
     await update.message.reply_text(text.replace(' ** ', '\n'))
 
 
-async def print_random_poem(update, context):
-    user = get_current_user(update.message.from_user.id)
-    if user is None:
-        await update.message.reply_text("Зайдите в аккаунт!")
-        return
-    poem = random.choice(POEMS_LIST)
+async def print_random_poem(update, context, user):
+    poem = random.choice(poems_list)
     await update.message.reply_text(poem.replace('{REPLACE}', user.name), parse_mode="Markdown")
 
 
@@ -262,14 +262,14 @@ async def generate_random_case(update, context):
     sign = random.choice(['+', '-', '*'])
     text = f'{first_number} {sign} {second_number}'
     context.user_data['answer'] = eval(text)
-    await update.message.reply_text(f'Сколько будет {text}?')
+    await update.message.reply_text(f'Сколько будет {text}? 🤔')
     return 'get_user_answer'
 
 
 async def get_user_answer(update, context):
     user_answer = update.message.text
     if user_answer.strip() == str(context.user_data["answer"]):
-        await update.message.reply_text('Молодец')
+        await update.message.reply_text('Молодец 😚')
     else:
         await update.message.reply_text(f'ХАХАХА Не правильно. Будет {context.user_data["answer"]}')
     return ConversationHandler.END
@@ -286,7 +286,7 @@ async def get_random_place(update, context):
             'spn': f'{spn},{spn}',
             'l': 'sat,skl'
         })
-        await update.message.reply_text(f'Случайное место с координатами: {ll[0]}, {ll[1]}. '
+        await update.message.reply_text(f'🧐 Случайное место с координатами: {ll[0]}, {ll[1]}. '
                                         f'Масштаб: {spn}')
         await update.message.reply_photo(response.content)
     except Exception:
@@ -295,18 +295,19 @@ async def get_random_place(update, context):
 
 # Admins only
 async def get_all_users_info(update, context):
+    user = get_current_user(update.message.from_user.id)
     await update.message.reply_text("Сейчас посмотрим...")
-    users_data = get_all_users(update.message.from_user.id)
-    if not users_data:
+    if not user.is_admin:
         await update.message.reply_text("У вас нет таких привилегий!!!")
     else:
+        users_data = get_all_users(update.message.from_user.id)
         await update.message.reply_text('\n'.join(f"{user.id}. {user}" for user in users_data))
 
 
 async def reload_data(update, context):
+    user = get_current_user(update.message.from_user.id)
     await update.message.reply_text("Сейчас посмотрим...")
-    users_data = get_all_users(update.message.from_user.id)
-    if not users_data:
+    if not user.is_admin:
         await update.message.reply_text("У вас нет таких привилегий!!!")
         return
     try:
