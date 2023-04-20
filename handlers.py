@@ -35,9 +35,9 @@ markup_not_login = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 reply_keyboard_is_login = [
-    ['Случайная задача', 'Случайное место', 'Случайный стих'],
+    ['Случайная задача 🤔', 'Случайное место 🌍', 'Случайная поэма 📖'],
     ['Позвать Мурада 🔞', 'Позвать идущего к реке', 'Позвать FlaRakRad', 'Слушать эхо'],
-    ['Инфо', 'Выход', 'Помощь']
+    ['Инфо', 'Выход ', 'Помощь 🆘']
 ]
 markup_main_keyboard = ReplyKeyboardMarkup(
     reply_keyboard_is_login,
@@ -105,7 +105,7 @@ async def handle_messages(update, context):
     text = random.choice(current_text).replace('{REPLACE}', user.name)
     try:
         while text == context.user_data['text']:
-            text = random.choice(text).replace('{REPLACE}', user.name)  # Чтобы не было повторений
+            text = random.choice(current_text).replace('{REPLACE}', user.name)  # Чтобы не было повторений
     except KeyError:
         context.user_data['text'] = ' '
     await update.message.reply_text(text)
