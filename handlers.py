@@ -238,11 +238,6 @@ async def logout_user(update, context, user):
     )
 
 
-async def say_hello(update, context, user):
-    user = get_current_user(update.message.from_user.id)
-    await update.message.reply_text(f"Привет, {user.fio}")
-
-
 async def user_info(update, context, user):
     text = f'Пользователь с id={user.id} ** Никнейм: {user.nickname} ** ' \
            f'Имя: {user.name} ** Фамилия: {user.surname} ** ' \
