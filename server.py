@@ -28,7 +28,7 @@ def main():
             'get_repeat_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_repeat_password)],
             'get_name': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             'get_surname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_surname)],
-            'get_phone': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
+            'get_phone': [MessageHandler(filters.CONTACT & ~filters.COMMAND, get_phone)],
 
             'get_l_nickname': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_nickname)],
             'get_l_password': [MessageHandler(filters.TEXT & ~filters.COMMAND, get_l_password)],
@@ -44,14 +44,15 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("logout", logout_user))
-    application.add_handler(CommandHandler("get_all_users_info", get_all_users_info))
-    application.add_handler(CommandHandler("reload_data", reload_data))
     application.add_handler(CommandHandler("register_user", register_user))
     application.add_handler(CommandHandler("login_user", login_user))
     application.add_handler(CommandHandler("user_info", user_info))
     application.add_handler(CommandHandler("print_random_poem", print_random_poem))
     application.add_handler(CommandHandler("get_random_place", get_random_place))
     application.add_handler(CommandHandler("info_bot", info_bot))
+
+    application.add_handler(CommandHandler("get_all_users_info", get_all_users_info))
+    application.add_handler(CommandHandler("reload_data", reload_data))
 
     application.run_polling()
 

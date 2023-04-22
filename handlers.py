@@ -4,7 +4,7 @@ import requests
 
 from data.system_functions import *
 
-from telegram import ReplyKeyboardMarkup, Update
+from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import ConversationHandler
 from constants import *
 
@@ -51,6 +51,19 @@ markup_stop = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True
 )
+request_contact_markup = ReplyKeyboardMarkup([[
+    KeyboardButton('Сбросить номер телефона', request_contact=True)]],
+    one_time_keyboard=False,
+    resize_keyboard=True)
+
+
+async def request_contact(update, context):
+    await update.message.reply_text(
+        f"gggive youuur numbberrr",
+        reply_markup=request_contact_markup
+    )
+    a = Update.message
+    await update.message.reply_text(f'{Update.message.contact.phone_number}')
 
 
 def change_keyboard(tg_user_id):
@@ -84,9 +97,6 @@ async def handle_messages(update, context):
         return
     elif text in HELP_WORDS:
         asyncio.create_task(help(update, context))
-        return
-    elif text in HELLO_WORDS:
-        asyncio.create_task(say_hello(update, context, user))
         return
     companion = user.selected_companion
     if text in CHANGE_COMPANION:
@@ -174,12 +184,14 @@ async def get_name(update, context):
 async def get_surname(update, context):
     surname = update.message.text
     context.user_data['surname'] = surname
-    await update.message.reply_text(f"{context.user_data['nickname']}! Введи номер телефона 📲")
+    await update.message.reply_text(
+        f"{context.user_data['nickname']}! Скинь номер телефона 📲 (нажми на кнопку)",
+        reply_markup=request_contact_markup)
     return 'get_phone'
 
 
 async def get_phone(update, context):  # Получение телефона. Конец регистрации
-    phone = update.message.text
+    phone = update.message.contact.phone_number
     context.user_data['phone'] = phone
     context.user_data['tg_id'] = update.message.from_user.id
     register(context.user_data)
