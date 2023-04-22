@@ -1,4 +1,6 @@
 import logging
+
+from bot_token import BOT_TOKEN
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from handlers import *
 
