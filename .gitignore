@@ -1,2 +1,4 @@
 .idea
 venv
+pyvenv.cfg
+constants.py
