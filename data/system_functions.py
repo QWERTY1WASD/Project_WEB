@@ -44,9 +44,8 @@ def get_current_user(tg_id: int) -> Optional[User]:
     return user
 
 
-def logout(tg_id: int):
+def logout(user):
     db_sess = db_session.create_session()
-    user = get_current_user(tg_id)
     user.telegram_id = None
     db_sess.merge(user)
     db_sess.commit()

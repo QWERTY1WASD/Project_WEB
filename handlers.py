@@ -85,15 +85,15 @@ async def handle_messages(update, context):
             "Остановитесь! ❌❌❌ Зайдите в аккаунт или зарегистрируйтесь")
         return
     elif text in EXIT_WORDS:
-        return asyncio.create_task(logout_user(update, context, user))
+        return asyncio.create_task(logout_user(update, context))
     elif text in INFO_WORDS:
-        return asyncio.create_task(user_info(update, context, user))
+        return asyncio.create_task(user_info(update, context))
     elif text in RANDOM_CASE_WORDS:
         return asyncio.create_task(generate_random_case(update, context))
     elif text in RANDOM_PLACE_WORDS:
         return asyncio.create_task(get_random_place(update, context))
     elif text in RANDOM_POEM_WORDS:
-        asyncio.create_task(print_random_poem(update, context, user))
+        asyncio.create_task(print_random_poem(update, context))
         return
     elif text in HELP_WORDS:
         asyncio.create_task(help(update, context))
@@ -242,15 +242,23 @@ async def get_l_password(update, context):
     return ConversationHandler.END
 
 
-async def logout_user(update, context, user):
-    logout(user.telegram_id)
+async def logout_user(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт или зарегистрируйтесь")
+        return
+    logout(user)
     await update.message.reply_text(
         "Вы вышли из аккаунта! Пока 🥺",
         reply_markup=change_keyboard(update.message.from_user.id)
     )
 
 
-async def user_info(update, context, user):
+async def user_info(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт или зарегистрируйтесь")
+        return
     text = f'Пользователь с id={user.id} ** Никнейм: {user.nickname} ** ' \
            f'Имя: {user.name} ** Фамилия: {user.surname} ** ' \
            f'Номер телефона: {user.phone} ** ' \
@@ -259,12 +267,19 @@ async def user_info(update, context, user):
     await update.message.reply_text(text.replace(' ** ', '\n'))
 
 
-async def print_random_poem(update, context, user):
+async def print_random_poem(update, context):
+    user = get_current_user(update.message.from_user.id)
+    if user is None:
+        await update.message.reply_text("Зайдите в аккаунт или зарегистрируйтесь")
+        return
     poem = random.choice(poems_list)
     await update.message.reply_text(poem.replace('{REPLACE}', user.name), parse_mode="Markdown")
 
 
 async def generate_random_case(update, context):
+    if get_current_user(update.message.from_user.id) is None:
+        await update.message.reply_text("Зайдите в аккаунт или зарегистрируйтесь")
+        return
     first_number = random.randint(0, 100)
     second_number = random.randint(0, 100)
     sign = random.choice(['+', '-', '*'])
@@ -284,6 +299,9 @@ async def get_user_answer(update, context):
 
 
 async def get_random_place(update, context):
+    if get_current_user(update.message.from_user.id) is None:
+        await update.message.reply_text("Зайдите в аккаунт или зарегистрируйтесь")
+        return
     try:
         map_request = "http://static-maps.yandex.ru/1.x/"
         ll = (random.randint(MIN_AND_MAX_LONGITUDE[0], MIN_AND_MAX_LONGITUDE[1]) / 100,
