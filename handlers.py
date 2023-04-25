@@ -118,7 +118,7 @@ async def handle_messages(update, context):
             text = random.choice(current_text).replace('{REPLACE}', user.name)  # Чтобы не было повторений
     except KeyError:
         context.user_data['text'] = ' '
-    await update.message.reply_text(text, reply_markup=markup_main_keyboard)
+    await update.message.reply_text(text)
     context.user_data['text'] = text
 
 
